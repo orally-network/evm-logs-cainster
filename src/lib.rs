@@ -28,7 +28,7 @@ async fn init() {
 
     let monitoring_interval = Duration::from_secs(40);
 
-    let chain_configs = vec![
+    let chain_monitoring_params = vec![
         ChainMonitoringParams {
             chain_name: "Ethereum".to_string(),
             rpc_providers: RpcServices::EthMainnet(Some(vec![EthMainnetService::Alchemy])),
@@ -49,7 +49,7 @@ async fn init() {
         },
     ];
 
-    let services: Vec<Arc<ChainService>> = chain_configs
+    let services: Vec<Arc<ChainService>> = chain_monitoring_params
         .into_iter()
         .map(|params| init_chain_service(params, monitoring_interval))
         .collect();
@@ -62,7 +62,6 @@ async fn init() {
     ic_cdk::println!("EVM logs monitoring is started");
 }
 
-// Ця структура описує параметри, які використовуються для моніторингу логів
 struct ChainMonitoringParams {
     chain_name: String,
     rpc_providers: RpcServices,
@@ -84,8 +83,6 @@ fn init_chain_service(params: ChainMonitoringParams, monitoring_interval: Durati
     service
 }
 
-// Оркестратор
-
 #[update]
 #[candid_method(update)]
 async fn call_register_publication(
@@ -101,8 +98,6 @@ async fn call_register_subscription(
 ) -> Vec<RegisterSubscriptionResult> {
     subscription_manager::register_subscription(registrations).await
 }
-
-// Broadcaster
 
 #[update(name = "icrc72_publish")]
 #[candid_method(update)]
@@ -120,8 +115,6 @@ async fn call_confirm_messages(
     subscription_manager::confirm_messages(notification_ids).await
 }
 
-// Subscriber
-
 #[update(name = "icrc72_handle_notification")]
 #[candid_method(update)]
 async fn icrc72_handle_notification(
@@ -129,8 +122,6 @@ async fn icrc72_handle_notification(
 ) {
     subscription_manager::handle_notification(notification).await
 }
-
-// Query methods
 
 #[query(name = "icrc72_get_subscriptions")]
 #[candid_method(query)]
@@ -142,8 +133,6 @@ fn call_get_subscriptions(
 ) -> Vec<SubscriptionInfo> {
     subscription_manager::get_subscriptions_info(namespace, prev, take, stats_filter)
 }
-
-// Candid interface export
 
 #[query]
 fn get_candid_pointer() -> String {

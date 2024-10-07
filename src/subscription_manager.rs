@@ -1,16 +1,13 @@
-use candid::{CandidType, Deserialize, Principal, Nat};
-use ic_cdk_macros::{init, post_upgrade, pre_upgrade};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use candid::{Principal, Nat};
+use crate::utils::current_timestamp;
 
 use evm_logs_types:: {
     PublicationInfo, SubscriptionInfo, Event, PublicationRegistration,
     RegisterPublicationResult, SubscriptionRegistration, RegisterSubscriptionResult,
     PublishError, EventNotification, ConfirmationResult, ICRC16Map
 };
-
-use crate::utils::{generate_sub_id, current_timestamp};
-
 
 thread_local! {
     static PUBLICATIONS: RefCell<HashMap<Nat, PublicationInfo>> = RefCell::new(HashMap::new());
@@ -25,37 +22,32 @@ thread_local! {
     static NEXT_NOTIFICATION_ID: RefCell<Nat> = RefCell::new(Nat::from(1u32));
 }
 
-// #[init]
 pub fn init() {
     ic_cdk::println!("SubscriptionManager initialized");
 }
 
-// #[pre_upgrade]
-pub fn pre_upgrade() {
-    let publications = PUBLICATIONS.with(|pubs| pubs.borrow().clone());
-    let subscriptions = SUBSCRIPTIONS.with(|subs| subs.borrow().clone());
-    let events = EVENTS.with(|evs| evs.borrow().clone());
+// pub fn pre_upgrade() {
+//     let publications = PUBLICATIONS.with(|pubs| pubs.borrow().clone());
+//     let subscriptions = SUBSCRIPTIONS.with(|subs| subs.borrow().clone());
+//     let events = EVENTS.with(|evs| evs.borrow().clone());
 
-    ic_cdk::storage::stable_save((publications, subscriptions, events))
-        .expect("Failed to save stable state");
-}
+//     ic_cdk::storage::stable_save((publications, subscriptions, events))
+//         .expect("Failed to save stable state");
+// }
 
-// #[post_upgrade]
-pub fn post_upgrade() {
-    let (saved_publications, saved_subscriptions, saved_events): (
-        HashMap<Nat, PublicationInfo>,
-        HashMap<Nat, SubscriptionInfo>,
-        HashMap<Nat, Event>,
-    ) = ic_cdk::storage::stable_restore().expect("Failed to restore stable state");
+// pub fn post_upgrade() {
+//     let (saved_publications, saved_subscriptions, saved_events): (
+//         HashMap<Nat, PublicationInfo>,
+//         HashMap<Nat, SubscriptionInfo>,
+//         HashMap<Nat, Event>,
+//     ) = ic_cdk::storage::stable_restore().expect("Failed to restore stable state");
 
-    PUBLICATIONS.with(|pubs| *pubs.borrow_mut() = saved_publications);
-    SUBSCRIPTIONS.with(|subs| *subs.borrow_mut() = saved_subscriptions);
-    EVENTS.with(|evs| *evs.borrow_mut() = saved_events);
-}
+//     PUBLICATIONS.with(|pubs| *pubs.borrow_mut() = saved_publications);
+//     SUBSCRIPTIONS.with(|subs| *subs.borrow_mut() = saved_subscriptions);
+//     EVENTS.with(|evs| *evs.borrow_mut() = saved_events);
+// }
 
-/// Publication registration (Orchestrator)
-// #[update(name = "icrc72_register_publication")]
-// #[candid_method(update)]
+
 pub async fn register_publication(
     registrations: Vec<PublicationRegistration>,
 ) -> Vec<RegisterPublicationResult> {
@@ -97,9 +89,6 @@ pub async fn register_publication(
     results
 }
 
-/// Subscription registration  (Orchestrator)
-// #[update(name = "icrc72_register_subscription")]
-// #[candid_method(update)]
 pub async fn register_subscription(
     registrations: Vec<SubscriptionRegistration>,
 ) -> Vec<RegisterSubscriptionResult> {
@@ -147,9 +136,7 @@ pub async fn register_subscription(
     results
 }
 
-/// Event publishing (Broadcaster)
-// #[update(name = "icrc72_publish")]
-// #[candid_method(update)]
+
 pub async fn publish_events(
     events: Vec<Event>,
 ) -> Vec<Option<Result<Vec<Nat>, PublishError>>> {
@@ -264,18 +251,14 @@ async fn distribute_event(event: Event) {
     }
 }
 
-/// Process confirmations from subsribers (Broadcaster)
-// #[update(name = "icrc72_confirm_messages")]
-// #[candid_method(update)]
+
 pub async fn confirm_messages(notification_ids: Vec<Nat>) -> ConfirmationResult {
     // TODO confirm messages
 
     ConfirmationResult::AllAccepted
 }
 
-/// Handle messages (Subscriber)
-// #[update(name = "icrc72_handle_notification")]
-// #[candid_method(update)]
+
 pub async fn handle_notification(notification: EventNotification) {
     ic_cdk::println!("Received notification: {:?}", notification);
 

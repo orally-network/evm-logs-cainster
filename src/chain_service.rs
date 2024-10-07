@@ -94,7 +94,7 @@ impl ChainService {
     async fn fetch_logs_and_update_time(&self) {
         match get_latest_block_number(&self.evm_rpc, self.config.rpc_providers.clone()).await {
             Ok(latest_block_number) => {
-                let mut last_processed_block = *self.last_processed_block.borrow();
+                let last_processed_block = *self.last_processed_block.borrow();
                 ic_cdk::println!(
                     "Last processed block number for {} : {:?}",
                     self.config.chain_name,
@@ -107,7 +107,6 @@ impl ChainService {
                 );
 
                 if last_processed_block == 0 {
-                    last_processed_block = latest_block_number;
                     *self.last_processed_block.borrow_mut() = latest_block_number;
                     return; 
                 }
